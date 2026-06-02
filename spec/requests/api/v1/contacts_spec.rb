@@ -397,4 +397,53 @@ RSpec.describe 'Api::V1::ContactsController', type: :request do
       expect(Contact.exists?(contact.id)).to be false
     end
   end
+
+  describe 'PUT /api/v1/contacts/:id' do
+    let(:user) { User.create!(email: "contacts-update-#{SecureRandom.hex(4)}@example.com", name: 'Test User') }
+    let(:contact) do
+      Contact.create!(
+        name: 'Test Contact',
+        email: 'contact@example.com',
+        custom_attributes: { 'cep' => '12345678', 'cidade' => 'Natal' },
+        additional_attributes: { 'test_key' => 'test_value' }
+      )
+    end
+    let(:headers) do
+      {
+        'X-Service-Token' => 'spec-service-token'
+      }
+    end
+
+    before do
+      ENV['EVOAI_CRM_API_TOKEN'] = 'spec-service-token'
+      Current.user = user
+    end
+
+    after do
+      ENV.delete('EVOAI_CRM_API_TOKEN')
+      Current.reset
+    end
+
+    it 'updates contact custom and additional attributes without clearing existing ones with blank values' do
+      put "/api/v1/contacts/#{contact.id}",
+          params: {
+            custom_attributes: { 'cep' => '', 'cidade' => nil, 'estado' => 'RN' },
+            additional_attributes: { 'test_key' => '', 'new_key' => 'new_val' }
+          },
+          headers: headers,
+          as: :json
+
+      expect(response).to have_http_status(:ok)
+      contact.reload
+      
+      # Existing attributes are preserved because blank/nil overrides were rejected
+      expect(contact.custom_attributes['cep']).to eq('12345678')
+      expect(contact.custom_attributes['cidade']).to eq('Natal')
+      expect(contact.custom_attributes['estado']).to eq('RN')
+
+      expect(contact.additional_attributes['test_key']).to eq('test_value')
+      expect(contact.additional_attributes['new_key']).to eq('new_val')
+    end
+  end
 end
+

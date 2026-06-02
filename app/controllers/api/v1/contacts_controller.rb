@@ -119,7 +119,7 @@ class Api::V1::ContactsController < Api::V1::BaseController
 
   def show
     success_response(
-      data: ContactSerializer.serialize(@contact, include_contact_inboxes: @include_contact_inboxes, include_companies: true),
+      data: ContactSerializer.serialize(@contact, include_contact_inboxes: @include_contact_inboxes, include_companies: true, include_pipelines: true),
       message: 'Contact retrieved successfully'
     )
   end
@@ -191,7 +191,7 @@ class Api::V1::ContactsController < Api::V1::BaseController
 
     success_response(
       data: {
-        contact: ContactSerializer.serialize(@contact, include_contact_inboxes: true, include_companies: true),
+        contact: ContactSerializer.serialize(@contact, include_contact_inboxes: true, include_companies: true, include_pipelines: true),
         contact_inbox: if @contact_inbox
                          {
                            inbox: @contact_inbox.inbox,
@@ -215,7 +215,7 @@ class Api::V1::ContactsController < Api::V1::BaseController
     process_avatar_from_url
 
     success_response(
-      data: ContactSerializer.serialize(@contact, include_contact_inboxes: @include_contact_inboxes, include_companies: true),
+      data: ContactSerializer.serialize(@contact, include_contact_inboxes: @include_contact_inboxes, include_companies: true, include_pipelines: true),
       message: 'Contact updated successfully'
     )
   end
@@ -417,15 +417,23 @@ class Api::V1::ContactsController < Api::V1::BaseController
   end
 
   def contact_custom_attributes
-    return permitted_params[:custom_attributes] if permitted_params.key?(:custom_attributes)
+    current_attrs = @contact.custom_attributes || {}
+    if permitted_params[:custom_attributes]
+      incoming_attrs = permitted_params[:custom_attributes].to_unsafe_h.reject { |_k, v| v.blank? }
+      return current_attrs.merge(incoming_attrs)
+    end
 
-    @contact.custom_attributes
+    current_attrs
   end
 
   def contact_additional_attributes
-    return @contact.additional_attributes.merge(permitted_params[:additional_attributes]) if permitted_params[:additional_attributes]
+    current_attrs = @contact.additional_attributes || {}
+    if permitted_params[:additional_attributes]
+      incoming_attrs = permitted_params[:additional_attributes].to_unsafe_h.reject { |_k, v| v.blank? }
+      return current_attrs.merge(incoming_attrs)
+    end
 
-    @contact.additional_attributes
+    current_attrs
   end
 
   def contact_update_params
