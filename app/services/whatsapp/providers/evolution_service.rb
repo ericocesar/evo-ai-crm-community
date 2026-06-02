@@ -326,7 +326,7 @@ class Whatsapp::Providers::EvolutionService < Whatsapp::Providers::BaseService
       number: clean_number,
       title: content.truncate(60),
       description: content,
-      footer: 'Evo CRM',
+      footer: 'BChat CRM',
       buttons: buttons
     }
 
@@ -355,7 +355,7 @@ class Whatsapp::Providers::EvolutionService < Whatsapp::Providers::BaseService
       title: content.truncate(60),
       description: content,
       buttonText: I18n.t('whatsapp.interactive.list_button', default: 'Menu'),
-      footerText: 'Evo CRM',
+      footerText: 'BChat CRM',
       sections: [{ title: I18n.t('whatsapp.interactive.list_section', default: 'Options'), rows: rows }]
     }
 

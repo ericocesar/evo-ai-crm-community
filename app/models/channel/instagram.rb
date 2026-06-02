@@ -2,12 +2,14 @@
 #
 # Table name: channel_instagram
 #
-#  id           :uuid             not null, primary key
-#  access_token :string           not null
-#  expires_at   :datetime         not null
-#  created_at   :datetime         not null
-#  updated_at   :datetime         not null
-#  instagram_id :string           not null
+#  id                             :uuid             not null, primary key
+#  access_token                   :string           not null
+#  expires_at                     :datetime         not null
+#  message_templates              :jsonb
+#  message_templates_last_updated :datetime
+#  created_at                     :datetime         not null
+#  updated_at                     :datetime         not null
+#  instagram_id                   :string           not null
 #
 # Indexes
 #

@@ -25,11 +25,17 @@
 #  created_at                    :datetime         not null
 #  updated_at                    :datetime         not null
 #  channel_id                    :uuid             not null
+#  portal_id                     :uuid
 #
 # Indexes
 #
 #  index_inboxes_on_channel_id_and_channel_type  (channel_id,channel_type)
 #  index_inboxes_on_default_conversation_status  (default_conversation_status)
+#  index_inboxes_on_portal_id                    (portal_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (portal_id => portals.id)
 #
 class Inbox < ApplicationRecord
   include Reportable

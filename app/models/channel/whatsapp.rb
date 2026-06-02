@@ -2,13 +2,15 @@
 #
 # Table name: channel_whatsapp
 #
-#  id                  :uuid             not null, primary key
-#  phone_number        :string           not null
-#  provider            :string           default("default")
-#  provider_config     :jsonb
-#  provider_connection :jsonb
-#  created_at          :datetime         not null
-#  updated_at          :datetime         not null
+#  id                             :uuid             not null, primary key
+#  message_templates              :jsonb
+#  message_templates_last_updated :datetime
+#  phone_number                   :string           not null
+#  provider                       :string           default("default")
+#  provider_config                :jsonb
+#  provider_connection            :jsonb
+#  created_at                     :datetime         not null
+#  updated_at                     :datetime         not null
 #
 # Indexes
 #

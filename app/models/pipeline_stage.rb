@@ -5,7 +5,6 @@
 #  id               :uuid             not null, primary key
 #  automation_rules :jsonb
 #  color            :string           default("#3B82F6")
-#  custom_fields    :jsonb            not null
 #  name             :string           not null
 #  position         :integer          not null
 #  stage_type       :integer          default(0)
@@ -15,7 +14,6 @@
 #
 # Indexes
 #
-#  index_pipeline_stages_on_custom_fields             (custom_fields) USING gin
 #  index_pipeline_stages_on_pipeline_id               (pipeline_id)
 #  index_pipeline_stages_on_pipeline_id_and_position  (pipeline_id,position) UNIQUE
 #

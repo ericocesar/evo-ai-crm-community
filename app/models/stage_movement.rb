@@ -2,24 +2,24 @@
 #
 # Table name: stage_movements
 #
-#  id               :uuid             not null, primary key
-#  movement_type    :integer          default("manual")
-#  notes            :text
-#  created_at       :datetime         not null
-#  updated_at       :datetime         not null
-#  from_stage_id    :uuid
-#  moved_by_id      :uuid
-#  pipeline_item_id :uuid             not null
-#  to_stage_id      :uuid             not null
+#  id                       :uuid             not null, primary key
+#  movement_type            :integer          default("manual")
+#  notes                    :text
+#  created_at               :datetime         not null
+#  updated_at               :datetime         not null
+#  from_stage_id            :uuid
+#  moved_by_id              :uuid
+#  pipeline_conversation_id :uuid             not null
+#  to_stage_id              :uuid             not null
 #
 # Indexes
 #
-#  index_stage_movements_on_pipeline_item_id  (pipeline_item_id)
+#  index_stage_movements_on_pipeline_conversation_id  (pipeline_conversation_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (from_stage_id => pipeline_stages.id)
-#  fk_rails_...  (pipeline_item_id => pipeline_items.id)
+#  fk_rails_...  (pipeline_conversation_id => pipeline_conversations.id)
 #  fk_rails_...  (to_stage_id => pipeline_stages.id)
 #
 class StageMovement < ApplicationRecord

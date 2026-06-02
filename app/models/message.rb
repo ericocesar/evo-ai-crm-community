@@ -24,8 +24,6 @@
 #
 # Indexes
 #
-#  idx_messages_conv_created_desc               (conversation_id,created_at DESC)
-#  idx_messages_conv_created_incoming_desc      (conversation_id,created_at DESC) WHERE (message_type = 0)
 #  index_messages_for_type_date_inbox           (inbox_id,content_type,created_at)
 #  index_messages_on_content                    (content) USING gin
 #  index_messages_on_conversation_id            (conversation_id)

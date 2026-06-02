@@ -2,11 +2,13 @@
 #
 # Table name: channel_telegram
 #
-#  id         :uuid             not null, primary key
-#  bot_name   :string
-#  bot_token  :string           not null
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
+#  id                             :uuid             not null, primary key
+#  bot_name                       :string
+#  bot_token                      :string           not null
+#  message_templates              :jsonb
+#  message_templates_last_updated :datetime
+#  created_at                     :datetime         not null
+#  updated_at                     :datetime         not null
 #
 # Indexes
 #

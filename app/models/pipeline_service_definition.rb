@@ -18,10 +18,6 @@
 #  index_pipeline_service_definitions_on_pipeline_and_name  (pipeline_id,name) UNIQUE
 #  index_pipeline_service_definitions_on_pipeline_id        (pipeline_id)
 #
-# Foreign Keys
-#
-#  fk_rails_...  (pipeline_id => pipelines.id)
-#
 class PipelineServiceDefinition < ApplicationRecord
   belongs_to :pipeline
 

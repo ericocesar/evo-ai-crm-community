@@ -26,9 +26,6 @@
 # Foreign Keys
 #
 #  fk_rails_...  (contact_id => contacts.id)
-#  fk_rails_...  (conversation_id => conversations.id)
-#  fk_rails_...  (pipeline_id => pipelines.id)
-#  fk_rails_...  (pipeline_stage_id => pipeline_stages.id)
 #
 class PipelineItem < ApplicationRecord
   include Wisper::Publisher

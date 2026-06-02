@@ -22,10 +22,6 @@
 #  index_automation_rule_runs_on_started_at           (started_at)
 #  index_automation_rule_runs_on_status               (status)
 #
-# Foreign Keys
-#
-#  fk_rails_...  (automation_rule_id => automation_rules.id) ON DELETE => cascade
-#
 class AutomationRuleRun < ApplicationRecord
   STATUSES = %w[matched no_match error skipped].freeze
 

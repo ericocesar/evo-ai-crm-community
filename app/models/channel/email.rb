@@ -4,7 +4,6 @@
 #
 #  id                        :uuid             not null, primary key
 #  email                     :string           not null
-#  email_signature           :text
 #  forward_to_email          :string           not null
 #  imap_address              :string           default("")
 #  imap_enable_ssl           :boolean          default(TRUE)

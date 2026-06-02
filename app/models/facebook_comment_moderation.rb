@@ -29,11 +29,6 @@
 #  index_facebook_comment_moderations_on_moderation_type  (moderation_type)
 #  index_facebook_comment_moderations_on_status           (status)
 #
-# Foreign Keys
-#
-#  fk_rails_...  (conversation_id => conversations.id)
-#  fk_rails_...  (message_id => messages.id)
-#
 class FacebookCommentModeration < ApplicationRecord
   include Wisper::Publisher
 

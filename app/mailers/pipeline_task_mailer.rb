@@ -53,6 +53,6 @@ class PipelineTaskMailer < ApplicationMailer
   private
 
   def brand_name
-    GlobalConfig.get('BRAND_NAME')['BRAND_NAME'] || 'Evo CRM'
+    GlobalConfig.get('BRAND_NAME')['BRAND_NAME'] || 'BChat CRM'
   end
 end

@@ -7,7 +7,6 @@
 #  feature_flags         :integer          default(7), not null
 #  hmac_mandatory        :boolean          default(FALSE)
 #  hmac_token            :string
-#  locale                :string
 #  pre_chat_form_enabled :boolean          default(FALSE)
 #  pre_chat_form_options :jsonb
 #  reply_time            :integer          default("in_a_few_minutes")

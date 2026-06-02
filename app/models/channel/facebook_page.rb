@@ -2,13 +2,15 @@
 #
 # Table name: channel_facebook_pages
 #
-#  id                :uuid             not null, primary key
-#  page_access_token :string           not null
-#  user_access_token :string           not null
-#  created_at        :datetime         not null
-#  updated_at        :datetime         not null
-#  instagram_id      :string
-#  page_id           :string           not null
+#  id                             :uuid             not null, primary key
+#  message_templates              :jsonb
+#  message_templates_last_updated :datetime
+#  page_access_token              :string           not null
+#  user_access_token              :string           not null
+#  created_at                     :datetime         not null
+#  updated_at                     :datetime         not null
+#  instagram_id                   :string
+#  page_id                        :string           not null
 #
 # Indexes
 #

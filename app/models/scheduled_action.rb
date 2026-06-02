@@ -41,7 +41,6 @@
 # Foreign Keys
 #
 #  fk_rails_...  (contact_id => contacts.id) ON DELETE => cascade
-#  fk_rails_...  (conversation_id => conversations.id) ON DELETE => cascade
 #
 
 class ScheduledAction < ApplicationRecord

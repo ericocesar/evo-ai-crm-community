@@ -2,15 +2,17 @@
 #
 # Table name: channel_twilio_sms
 #
-#  id                    :uuid             not null, primary key
-#  account_sid           :string           not null
-#  api_key_sid           :string
-#  auth_token            :string           not null
-#  medium                :integer          default("sms")
-#  messaging_service_sid :string
-#  phone_number          :string
-#  created_at            :datetime         not null
-#  updated_at            :datetime         not null
+#  id                             :uuid             not null, primary key
+#  account_sid                    :string           not null
+#  api_key_sid                    :string
+#  auth_token                     :string           not null
+#  medium                         :integer          default("sms")
+#  message_templates              :jsonb
+#  message_templates_last_updated :datetime
+#  messaging_service_sid          :string
+#  phone_number                   :string
+#  created_at                     :datetime         not null
+#  updated_at                     :datetime         not null
 #
 # Indexes
 #

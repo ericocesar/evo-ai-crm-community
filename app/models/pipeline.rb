@@ -4,10 +4,8 @@
 #
 #  id            :uuid             not null, primary key
 #  config        :jsonb
-#  custom_fields :jsonb            not null
 #  description   :text
 #  is_active     :boolean          default(TRUE), not null
-#  is_default    :boolean          default(FALSE), not null
 #  name          :string           not null
 #  pipeline_type :string           default("custom"), not null
 #  visibility    :integer          default("private")
@@ -17,10 +15,8 @@
 #
 # Indexes
 #
-#  index_pipelines_on_created_by_id      (created_by_id)
-#  index_pipelines_on_custom_fields      (custom_fields) USING gin
-#  index_pipelines_on_is_default_unique  (is_default) WHERE (is_default = true)
-#  index_pipelines_on_name               (name) UNIQUE
+#  index_pipelines_on_created_by_id  (created_by_id)
+#  index_pipelines_on_name           (name) UNIQUE
 #
 class Pipeline < ApplicationRecord
   belongs_to :created_by, class_name: 'User'

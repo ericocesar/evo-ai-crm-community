@@ -2,12 +2,14 @@
 #
 # Table name: channel_line
 #
-#  id                  :uuid             not null, primary key
-#  line_channel_secret :string           not null
-#  line_channel_token  :string           not null
-#  created_at          :datetime         not null
-#  updated_at          :datetime         not null
-#  line_channel_id     :string           not null
+#  id                             :uuid             not null, primary key
+#  line_channel_secret            :string           not null
+#  line_channel_token             :string           not null
+#  message_templates              :jsonb
+#  message_templates_last_updated :datetime
+#  created_at                     :datetime         not null
+#  updated_at                     :datetime         not null
+#  line_channel_id                :string           not null
 #
 # Indexes
 #

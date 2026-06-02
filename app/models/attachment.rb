@@ -3,7 +3,6 @@
 # Table name: attachments
 #
 #  id               :uuid             not null, primary key
-#  attachable_type  :string
 #  coordinates_lat  :float            default(0.0)
 #  coordinates_long :float            default(0.0)
 #  extension        :string
@@ -13,11 +12,11 @@
 #  meta             :jsonb
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
-#  attachable_id    :uuid
+#  message_id       :uuid             not null
 #
 # Indexes
 #
-#  index_attachments_on_attachable_type_and_attachable_id  (attachable_type,attachable_id)
+#  index_attachments_on_message_id  (message_id)
 #
 class Attachment < ApplicationRecord
   include Rails.application.routes.url_helpers
