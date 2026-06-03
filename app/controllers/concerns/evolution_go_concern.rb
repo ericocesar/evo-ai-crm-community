@@ -48,11 +48,13 @@ module EvolutionGoConcern
   end
 
   def webhook_url
-    backend_url = ENV['BACKEND_URL'].presence ||
-                  GlobalConfigService.load('BACKEND_URL', nil).to_s.strip.presence
-    raise 'BACKEND_URL is not configured (required to register Evolution Go webhook callback)' if backend_url.blank?
+    ENV['EVOLUTION_GO_WEBHOOK_URL'].presence || begin
+      backend_url = ENV['BACKEND_URL'].presence ||
+                    GlobalConfigService.load('BACKEND_URL', nil).to_s.strip.presence
+      raise 'BACKEND_URL is not configured (required to register Evolution Go webhook callback)' if backend_url.blank?
 
-    "#{backend_url.chomp('/')}/webhooks/whatsapp/evolution_go"
+      "#{backend_url.chomp('/')}/webhooks/whatsapp/evolution_go"
+    end
   end
 
   # Resolves Evolution Go credentials for an existing channel, falling back to
