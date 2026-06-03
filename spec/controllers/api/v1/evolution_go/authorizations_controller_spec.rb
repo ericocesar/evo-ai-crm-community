@@ -83,4 +83,52 @@ RSpec.describe Api::V1::EvolutionGo::AuthorizationsController, type: :controller
       expect { controller_instance.create }.not_to raise_error
     end
   end
+
+  describe '#set_instance_params' do
+    let(:controller_instance) { described_class.new }
+    let(:channel) do
+      instance_double(
+        Channel::Whatsapp,
+        id: 'chan-uuid',
+        provider_config: { 'api_url' => 'http://channel.example.com', 'admin_token' => 'chan-admin', 'instance_token' => 'chan-tok',
+                           'instance_uuid' => 'inst-uuid', 'instance_name' => 'inst-name' },
+        inbox: instance_double(Inbox)
+      )
+    end
+
+    before do
+      allow(GlobalConfigService).to receive(:load).and_call_original
+      allow(GlobalConfigService).to receive(:load).with('EVOLUTION_GO_API_URL', '').and_return('http://global.example.com')
+      allow(GlobalConfigService).to receive(:load).with('EVOLUTION_GO_ADMIN_SECRET', '').and_return('global-secret')
+    end
+
+    context 'when instance_uuid is passed but some credential is blank' do
+      before do
+        controller_instance.params = ActionController::Parameters.new(instanceName: 'inst-uuid')
+        relation = double('relation')
+        allow(Channel::Whatsapp).to receive(:joins).with(:inbox).and_return(relation)
+        allow(relation).to receive(:where).and_return(relation)
+        allow(relation).to receive(:first).and_return(channel)
+      end
+
+      it 'resolves credentials using the channel and helper' do
+        controller_instance.send(:set_instance_params)
+
+        expect(controller_instance.instance_variable_get(:@api_url)).to eq('http://channel.example.com')
+        expect(controller_instance.instance_variable_get(:@admin_token)).to eq('chan-admin')
+        expect(controller_instance.instance_variable_get(:@instance_token)).to eq('chan-tok')
+        expect(controller_instance.instance_variable_get(:@instance_name)).to eq('inst-name')
+      end
+
+      it 'prioritizes explicit param api_url over channel creds' do
+        controller_instance.params = ActionController::Parameters.new(
+          authorization: { api_url: 'http://override.example.com', instance_uuid: 'inst-uuid' }
+        )
+        controller_instance.send(:set_instance_params)
+
+        expect(controller_instance.instance_variable_get(:@api_url)).to eq('http://override.example.com')
+        expect(controller_instance.instance_variable_get(:@instance_token)).to eq('chan-tok')
+      end
+    end
+  end
 end

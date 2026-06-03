@@ -248,20 +248,30 @@ class Api::V1::EvolutionGo::AuthorizationsController < Api::V1::BaseController
 
     Rails.logger.info "Evolution Go API: Looking for instance with identifier: #{@instance_uuid}"
 
-    # Try to find the channel first by instance UUID
+    # Try to find the channel first by instance UUID via JSONB match
     whatsapp_channel = Channel::Whatsapp.joins(:inbox)
                                         .where(provider: 'evolution_go')
-                                        .find { |ch| ch.provider_config['instance_uuid'] == @instance_uuid }
+                                        .where('provider_config @> ?', { instance_uuid: @instance_uuid }.to_json)
+                                        .first
+
+    # If not found by instance_uuid, try by instance_name
+    if whatsapp_channel.nil?
+      whatsapp_channel = Channel::Whatsapp.joins(:inbox)
+                                          .where(provider: 'evolution_go')
+                                          .where('provider_config @> ?', { instance_name: @instance_uuid }.to_json)
+                                          .first
+    end
 
     if whatsapp_channel
       Rails.logger.info "Evolution Go API: Found channel with config: #{whatsapp_channel.provider_config.inspect}"
 
-      # Extract configuration from the channel
+      # Extract configuration from the channel using the helper to handle fallbacks correctly
+      creds = evolution_go_credentials_for(whatsapp_channel)
       @inbox = whatsapp_channel.inbox
-      @api_url = whatsapp_channel.provider_config['api_url'] if @api_url.blank?
-      @admin_token = whatsapp_channel.provider_config['admin_token'] if @admin_token.blank?
-      @instance_token = whatsapp_channel.provider_config['instance_token'] if @instance_token.blank?
-      @instance_name = whatsapp_channel.provider_config['instance_name'] if @instance_name.blank?
+      @api_url = auth_params[:api_url].presence || creds[:api_url]
+      @admin_token = auth_params[:admin_token].presence || creds[:admin_token]
+      @instance_token = auth_params[:instance_token].presence || creds[:instance_token]
+      @instance_name = auth_params[:instance_name].presence || creds[:instance_name]
     else
       Rails.logger.warn "Evolution Go API: No channel found for instance_uuid: #{@instance_uuid}"
     end
