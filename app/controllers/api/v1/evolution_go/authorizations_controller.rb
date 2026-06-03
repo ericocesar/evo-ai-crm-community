@@ -41,6 +41,9 @@ class Api::V1::EvolutionGo::AuthorizationsController < Api::V1::BaseController
         }
       end
 
+      # Check if instance already exists, delete if it does
+      check_and_delete_existing_instance(@api_url, @admin_token, @instance_name)
+
       # Create new instance
       instance_data = create_instance_go(@api_url, @admin_token, @instance_name, auth_params)
 
@@ -502,11 +505,42 @@ class Api::V1::EvolutionGo::AuthorizationsController < Api::V1::BaseController
     raise "Failed to delete instance: #{e.message}"
   end
 
-  def check_and_delete_existing_instance(_api_url, _admin_token, instance_name)
-    Rails.logger.info "Evolution Go API: Checking if instance #{instance_name} already exists"
-    Rails.logger.info 'Evolution Go API: Currently using instance management approach for Evolution Go'
+  def check_and_delete_existing_instance(api_url, admin_token, instance_name)
+    all_url = "#{api_url.chomp('/')}/instance/all"
+    Rails.logger.info "Evolution Go API: Fetching all instances from #{all_url} to check for #{instance_name}"
+
+    uri = URI.parse(all_url)
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = (uri.scheme == 'https')
+    http.open_timeout = 10
+    http.read_timeout = 10
+
+    request = Net::HTTP::Get.new(uri)
+    request['apikey'] = admin_token
+    request['Content-Type'] = 'application/json'
+
+    response = http.request(request)
+
+    unless response.is_a?(Net::HTTPSuccess)
+      Rails.logger.warn "Evolution Go API: Failed to check existing instances. Status: #{response.code}"
+      return
+    end
+
+    response_data = JSON.parse(response.body)
+    instances = response_data['data'] || []
+
+    matching_instance = instances.find { |inst| inst['name'] == instance_name }
+
+    if matching_instance
+      instance_id = matching_instance['id']
+      Rails.logger.info "Evolution Go API: Instance #{instance_name} (ID: #{instance_id}) already exists. Deleting it..."
+      delete_instance_go(api_url, admin_token, instance_id)
+      sleep 2
+    else
+      Rails.logger.info "Evolution Go API: Instance #{instance_name} does not exist on server"
+    end
   rescue StandardError => e
-    Rails.logger.info "Evolution Go API: Instance #{instance_name} doesn't exist (#{e.message}), proceeding with creation"
+    Rails.logger.warn "Evolution Go API: Error checking/deleting existing instance #{instance_name}: #{e.message}"
   end
 
   def generate_instance_token

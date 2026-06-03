@@ -61,6 +61,7 @@ RSpec.describe Api::V1::EvolutionGo::AuthorizationsController, type: :controller
         'instance_uuid' => 'uuid-from-create',
         'data' => {}
       )
+      allow(controller_instance).to receive(:check_and_delete_existing_instance)
       allow(controller_instance).to receive(:render)
     end
 
