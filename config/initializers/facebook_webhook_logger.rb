@@ -3,7 +3,7 @@
 # Require the middleware class explicitly before registering
 require_relative '../../app/middleware/facebook_webhook_logger'
 
-if Rails.application.config.middleware.any? { |m| m.klass.to_s == 'ActionDispatch::Static' }
+if Rails.application.config.public_file_server.enabled
   Rails.application.config.middleware.insert_before ActionDispatch::Static, FacebookWebhookLogger
 else
   Rails.application.config.middleware.use FacebookWebhookLogger
