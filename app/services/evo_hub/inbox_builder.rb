@@ -6,6 +6,7 @@ module EvoHub
       'facebook' => :build_facebook,
       'instagram' => :build_instagram
     }.freeze
+    WEBHOOK_EVENTS = %w[channel_connected channel_disconnected event_received webhook_delivered webhook_failed].freeze
 
     class UnsupportedChannelType < StandardError; end
 
@@ -83,19 +84,22 @@ module EvoHub
     end
 
     def create_in_hub(channel)
-      client.create_channel(
+      hub_response = client.create_channel(
         type: hub_channel_type(channel),
         name: @name,
         external_id: channel.id.to_s,
         webhook_url: webhook_url,
         webhook_secret: webhook_secret,
-        webhook_events: %w[channel_connected channel_disconnected event_received webhook_delivered webhook_failed],
+        webhook_events: WEBHOOK_EVENTS,
         channel_credentials_id: @channel_credentials_id
       )
+      validate_channel_response!(hub_response)
+      ensure_webhook!(hub_response)
+      hub_response
     end
 
     def persist_hub_metadata(channel, hub_response)
-      channel_body = hub_response.is_a?(Hash) ? (hub_response['channel'] || {}) : {}
+      channel_body = extract_channel_body(hub_response)
       hub_block = {
         'channel_id' => channel_body['id'],
         'channel_token' => channel_body['token'],
@@ -115,8 +119,50 @@ module EvoHub
     end
 
     def extract_public_link(hub_response)
-      channel_body = hub_response.is_a?(Hash) ? (hub_response['channel'] || {}) : {}
+      channel_body = extract_channel_body(hub_response)
       EvoHub::Client.public_link(channel_body['token'])
+    end
+
+    def ensure_webhook!(hub_response)
+      return if hub_response['webhook_id'].present?
+
+      channel_body = extract_channel_body(hub_response)
+      webhook = client.create_webhook(
+        name: "EvoCRM - #{@name}",
+        url: webhook_url,
+        events: WEBHOOK_EVENTS,
+        secret: webhook_secret,
+        channels: [channel_body['id']]
+      )
+      hub_response['webhook_id'] = extract_webhook_id(webhook)
+      return if hub_response['webhook_id'].present?
+
+      raise EvoHub::Client::RequestError.new(
+        'Evolution Hub created the channel but did not return a webhook id',
+        body: webhook
+      )
+    end
+
+    def validate_channel_response!(hub_response)
+      channel_body = extract_channel_body(hub_response)
+      return if channel_body['id'].present? && channel_body['token'].present?
+
+      raise EvoHub::Client::RequestError.new(
+        'Evolution Hub did not return a valid channel payload',
+        body: hub_response
+      )
+    end
+
+    def extract_channel_body(hub_response)
+      return {} unless hub_response.is_a?(Hash)
+
+      hub_response['channel'].is_a?(Hash) ? hub_response['channel'] : hub_response
+    end
+
+    def extract_webhook_id(webhook_response)
+      return nil unless webhook_response.is_a?(Hash)
+
+      webhook_response['id'] || webhook_response.dig('webhook', 'id')
     end
   end
 end
