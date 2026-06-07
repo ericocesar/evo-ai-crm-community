@@ -397,6 +397,26 @@
   type: secret
 ## ------ End of Configs added for Evolution Go ------ ##
 
+## ------ Configs added for Evolution Hub (Meta proxy) ------ ##
+- name: EVOLUTION_HUB_ENABLED
+  display_title: 'Evolution Hub Enabled'
+  value: false
+  locked: false
+  description: 'When true, route Meta channel setup through the configured Evolution Hub tenant.'
+- name: EVOLUTION_HUB_API_KEY
+  display_title: 'Evolution Hub API Key'
+  value:
+  locked: false
+  description: 'API key generated in the Hub admin panel. Used for channel and webhook management calls.'
+  type: secret
+- name: EVOLUTION_HUB_WEBHOOK_SECRET
+  display_title: 'Evolution Hub Webhook Secret'
+  value:
+  locked: false
+  description: 'Shared HMAC-SHA256 secret used to sign webhooks the Hub posts to /webhooks/evolution_hub.'
+  type: secret
+## ------ End of Configs added for Evolution Hub ------ ##
+
 ## ------ Configs added for Twitter Channel ------ ##
 - name: TWITTER_APP_ID
   display_title: 'Twitter App ID'
@@ -634,4 +654,3 @@
   description: 'Microsoft Clarity project ID for user behavior analytics'
   type: text
 ## ------ End Frontend Runtime Configuration ------ ##
-

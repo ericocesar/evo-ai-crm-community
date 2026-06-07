@@ -27,6 +27,8 @@ class Api::V1::GlobalConfigController < Api::BaseController
       hasInstagramConfig: IntegrationRequirements.configured?('instagram'),
       hasEvolutionConfig: IntegrationRequirements.configured?('evolution'),
       hasEvolutionGoConfig: IntegrationRequirements.configured?('evolution_go'),
+      hasEvolutionHubConfig: IntegrationRequirements.configured?('evolution_hub'),
+      evolutionHubEnabled: evolution_hub_active?,
       hasTwitterConfig: IntegrationRequirements.configured?('twitter'),
       openaiConfigured: openai_configured?,
       enableAccountSignup: enable_account_signup?,
@@ -47,5 +49,10 @@ class Api::V1::GlobalConfigController < Api::BaseController
     model = GlobalConfigService.load('OPENAI_MODEL', '').to_s.strip
 
     api_url.present? && api_key.present? && model.present?
+  end
+
+  def evolution_hub_active?
+    enabled = GlobalConfigService.load('EVOLUTION_HUB_ENABLED', 'false').to_s
+    ActiveModel::Type::Boolean.new.cast(enabled) && IntegrationRequirements.configured?('evolution_hub')
   end
 end

@@ -60,7 +60,7 @@ class InstallationConfig < ApplicationRecord
   end
 
   def sensitive?
-    name.to_s.end_with?('_SECRET')
+    name.to_s.end_with?('_SECRET') || name.to_s == 'EVOLUTION_HUB_API_KEY'
   end
 
   def value

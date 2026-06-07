@@ -19,6 +19,10 @@ module Api
                             INSTAGRAM_API_VERSION ENABLE_INSTAGRAM_CHANNEL_HUMAN_AGENT],
           'evolution' => %w[EVOLUTION_API_URL EVOLUTION_ADMIN_SECRET],
           'evolution_go' => %w[EVOLUTION_GO_API_URL EVOLUTION_GO_ADMIN_SECRET],
+          'evolution_hub' => %w[
+            EVOLUTION_HUB_ENABLED
+            EVOLUTION_HUB_API_KEY EVOLUTION_HUB_WEBHOOK_SECRET
+          ],
           'openai' => %w[
             OPENAI_API_URL OPENAI_API_SECRET OPENAI_MODEL OPENAI_ENABLE_AUDIO_TRANSCRIPTION
             OPENAI_PROMPT_REPLY OPENAI_PROMPT_SUMMARY OPENAI_PROMPT_REPHRASE
@@ -127,6 +131,8 @@ module Api
             end
           when 'storage'
             ConfigTest::StorageTestService.new.call
+          when 'evolution_hub'
+            ConfigTest::EvolutionHubTestService.new.call
           else
             { success: false, message: "Connection testing not supported for #{config_type}" }
           end

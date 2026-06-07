@@ -570,6 +570,15 @@ Rails.application.routes.draw do
 
       namespace :integrations do
         resources :webhooks, only: [:create]
+
+        resource :evolution_hub, controller: 'evolution_hub', only: [] do
+          collection do
+            get :meta_app_options
+            get :plan
+            get :channels
+            get :available_channels
+          end
+        end
       end
 
       resource :profile, only: [:show, :update] do
