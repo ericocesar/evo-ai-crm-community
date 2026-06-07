@@ -64,6 +64,16 @@ module Api
         end
 
         def create
+          if params[:via_hub_existing] && evo_hub_enabled? &&
+             EvoHub::ExistingChannelLinker::SUPPORTED_TYPES.key?(params[:inbox]&.dig(:channel_type).to_s)
+            return link_existing_evo_hub_channel
+          end
+
+          if params[:via_hub] && evo_hub_enabled? &&
+             EvoHub::InboxBuilder::SUPPORTED_TYPES.key?(params[:inbox]&.dig(:channel_type).to_s)
+            return create_via_evo_hub
+          end
+
           ActiveRecord::Base.transaction do
             channel = create_channel
             # Para Telegram, garantir que bot_name esteja disponível
@@ -580,6 +590,111 @@ module Api
         end
 
         private
+
+        def create_via_evo_hub
+          result = EvoHub::InboxBuilder.new(
+            channel_type: params[:inbox][:channel_type].to_s,
+            name: params[:inbox][:name].to_s,
+            channel_credentials_id: params[:inbox][:channel_credentials_id]
+          ).perform
+
+          @inbox = result[:inbox]
+          success_response(
+            data: InboxSerializer.serialize(@inbox).merge(
+              evolution_hub: { public_link: result[:public_link] }
+            ),
+            message: 'Inbox created via Evo Hub. Open the public link to finish connecting the Meta channel.',
+            status: :created
+          )
+        rescue EvoHub::Client::ConfigurationError => e
+          Rails.logger.error("EvoHub config error: #{e.message}")
+          error_response(
+            ApiErrorCodes::INVALID_PARAMETER,
+            'Evo Hub não está configurado neste workspace. Avise um administrador.',
+            status: :bad_gateway
+          )
+        rescue EvoHub::Client::RequestError => e
+          Rails.logger.error("EvoHub inbox creation failed: HTTP #{e.status} code=#{e.code.inspect} body=#{e.body}")
+          error_response(
+            ApiErrorCodes::INVALID_PARAMETER,
+            evo_hub_user_message(e),
+            details: evo_hub_error_details(e),
+            status: evo_hub_error_http_status(e)
+          )
+        end
+
+        def link_existing_evo_hub_channel
+          result = EvoHub::ExistingChannelLinker.new(
+            channel_type: params[:inbox][:channel_type].to_s,
+            name: params[:inbox][:name].to_s,
+            hub_channel_id: params[:hub_channel_id].to_s
+          ).perform
+
+          @inbox = result[:inbox]
+          success_response(
+            data: InboxSerializer.serialize(@inbox).merge(
+              evolution_hub: {
+                linked: true,
+                hub_channel_id: result[:hub_channel]['id']
+              }
+            ),
+            message: 'Inbox vinculada a canal Evo Hub existente.',
+            status: :created
+          )
+        rescue EvoHub::ExistingChannelLinker::AlreadyLinked => e
+          error_response(ApiErrorCodes::INVALID_PARAMETER, e.message, status: :conflict)
+        rescue EvoHub::ExistingChannelLinker::ChannelTypeMismatch,
+               EvoHub::ExistingChannelLinker::UnsupportedChannelType => e
+          error_response(ApiErrorCodes::INVALID_PARAMETER, e.message, status: :unprocessable_entity)
+        rescue EvoHub::Client::ConfigurationError => e
+          Rails.logger.error("EvoHub config error: #{e.message}")
+          error_response(
+            ApiErrorCodes::INVALID_PARAMETER,
+            'Evo Hub não está configurado neste workspace. Avise um administrador.',
+            status: :bad_gateway
+          )
+        rescue EvoHub::Client::RequestError => e
+          Rails.logger.error("EvoHub existing-channel link failed: HTTP #{e.status} code=#{e.code.inspect} body=#{e.body}")
+          error_response(
+            ApiErrorCodes::INVALID_PARAMETER,
+            evo_hub_user_message(e),
+            details: evo_hub_error_details(e),
+            status: evo_hub_error_http_status(e)
+          )
+        end
+
+        def evo_hub_enabled?
+          enabled = GlobalConfigService.load('EVOLUTION_HUB_ENABLED', 'false').to_s
+          ActiveModel::Type::Boolean.new.cast(enabled) && IntegrationRequirements.configured?('evolution_hub')
+        end
+
+        def evo_hub_user_message(err)
+          case err.code
+          when 'PLAN_FORBIDS_SHARED'
+            'Seu plano no Evo Hub exige cadastrar uma Meta App própria antes de criar este canal.'
+          when 'PLAN_FORBIDS_BYO'
+            'Seu plano no Evo Hub não permite Meta App própria. Use a Meta App compartilhada.'
+          when 'PLAN_QUOTA_EXCEEDED', 'QUOTA_EXCEEDED'
+            'Limite do seu plano no Evo Hub atingido. Faça upgrade ou remova canais/webhooks existentes.'
+          else
+            "Evo Hub error: #{err.message}"
+          end
+        end
+
+        def evo_hub_error_details(err)
+          return nil if err.code.blank?
+
+          { evolution_hub: { code: err.code, variables: err.variables }.compact }
+        end
+
+        def evo_hub_error_http_status(err)
+          case err.status
+          when 403 then :forbidden
+          when 404 then :not_found
+          when 400..499 then :unprocessable_entity
+          else :bad_gateway
+          end
+        end
 
         def fetch_inbox
           @inbox = Inbox.find(params[:id])

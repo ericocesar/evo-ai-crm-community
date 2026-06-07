@@ -23,8 +23,9 @@ class Channel::Instagram < ApplicationRecord
 
   AUTHORIZATION_ERROR_THRESHOLD = 1
 
-  validates :access_token, presence: true
-  validates :instagram_id, uniqueness: true, presence: true
+  validates :access_token, presence: true, unless: :hub_managed?
+  validates :instagram_id, uniqueness: true
+  validates :instagram_id, presence: true, unless: :hub_managed?
 
   after_create_commit :subscribe
   after_update_commit :resubscribe_if_token_changed
@@ -32,6 +33,18 @@ class Channel::Instagram < ApplicationRecord
 
   def name
     'Instagram'
+  end
+
+  def hub_pending?
+    evolution_hub_meta.is_a?(Hash) && evolution_hub_meta['status'] == 'pending'
+  end
+
+  def hub_active?
+    evolution_hub_meta.is_a?(Hash) && evolution_hub_meta['status'] == 'active'
+  end
+
+  def hub_managed?
+    hub_pending? || hub_active?
   end
 
   def create_contact_inbox(instagram_id, name)
@@ -43,6 +56,8 @@ class Channel::Instagram < ApplicationRecord
   end
 
   def subscribe
+    return true if hub_pending? || hub_active?
+
     # ref https://developers.facebook.com/docs/instagram-platform/webhooks#enable-subscriptions
     Rails.logger.info("Instagram: Subscribing to webhooks for instagram_id=#{instagram_id}")
 
@@ -68,6 +83,8 @@ class Channel::Instagram < ApplicationRecord
   end
 
   def unsubscribe
+    return true if hub_pending? || hub_active?
+
     HTTParty.delete(
       "https://graph.instagram.com/v23.0/#{instagram_id}/subscribed_apps",
       query: {

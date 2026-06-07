@@ -33,6 +33,14 @@ class Channel::FacebookPage < ApplicationRecord
     'Facebook'
   end
 
+  def hub_pending?
+    evolution_hub_meta.is_a?(Hash) && evolution_hub_meta['status'] == 'pending'
+  end
+
+  def hub_active?
+    evolution_hub_meta.is_a?(Hash) && evolution_hub_meta['status'] == 'active'
+  end
+
   def create_contact_inbox(instagram_id, name)
     @contact_inbox = ::ContactInboxWithContactBuilder.new({
                                                             source_id: instagram_id,
@@ -42,6 +50,8 @@ class Channel::FacebookPage < ApplicationRecord
   end
 
   def subscribe
+    return true if hub_pending? || hub_active?
+
     # ref https://developers.facebook.com/docs/messenger-platform/reference/webhook-events
     fields = %w[messages message_deliveries message_echoes message_reads standby messaging_handovers feed]
 
@@ -65,6 +75,8 @@ class Channel::FacebookPage < ApplicationRecord
   private
 
   def unsubscribe
+    return true if hub_pending? || hub_active?
+
     Facebook::Messenger::Subscriptions.unsubscribe(access_token: page_access_token)
   rescue StandardError => e
     Rails.logger.debug { "Rescued: #{e.inspect}" }

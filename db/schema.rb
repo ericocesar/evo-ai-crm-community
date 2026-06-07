@@ -242,6 +242,7 @@ ActiveRecord::Schema[7.1].define(version: 9025_08_19_224901) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.string "instagram_id"
+    t.jsonb "evolution_hub_meta", default: {}, null: false
     t.index ["page_id"], name: "index_channel_facebook_pages_on_page_id", unique: true
   end
 
@@ -251,6 +252,7 @@ ActiveRecord::Schema[7.1].define(version: 9025_08_19_224901) do
     t.string "instagram_id", null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
+    t.jsonb "evolution_hub_meta", default: {}, null: false
     t.index ["instagram_id"], name: "index_channel_instagram_on_instagram_id", unique: true
   end
 
