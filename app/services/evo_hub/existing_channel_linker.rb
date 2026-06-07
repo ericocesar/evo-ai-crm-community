@@ -21,18 +21,20 @@ module EvoHub
       raise UnsupportedChannelType, "channel_type=#{@channel_type} cannot use Evo Hub" unless SUPPORTED_TYPES.key?(@channel_type)
       raise ArgumentError, 'hub_channel_id is required' if @hub_channel_id.blank?
 
-      hub_channel = client.get_channel(@hub_channel_id)
+      hub_channel = extract_channel(client.get_channel(@hub_channel_id))
+      validate_channel_payload!(hub_channel)
+      @hub_channel_id = hub_channel['id'].to_s
       validate_type_match!(hub_channel)
       validate_not_already_linked!
 
       ActiveRecord::Base.transaction do
-        webhook = client.create_webhook(
+        webhook = extract_webhook(client.create_webhook(
           name: "EvoCRM - #{@name}",
           url: webhook_url,
           events: %w[channel_connected channel_disconnected event_received webhook_delivered webhook_failed],
           secret: GlobalConfigService.load('EVOLUTION_HUB_WEBHOOK_SECRET', nil),
           channels: [@hub_channel_id]
-        )
+        ))
         channel = build_channel(hub_channel, webhook)
         inbox = Inbox.create!(channel: channel, name: @name)
         { inbox: inbox, hub_channel: hub_channel }
@@ -54,6 +56,15 @@ module EvoHub
       return if hub_channel.is_a?(Hash) && hub_channel['type'] == SUPPORTED_TYPES[@channel_type]
 
       raise ChannelTypeMismatch, 'Hub channel type does not match requested channel type'
+    end
+
+    def validate_channel_payload!(hub_channel)
+      return if hub_channel.is_a?(Hash) && hub_channel['id'].present? && hub_channel['token'].present?
+
+      raise EvoHub::Client::RequestError.new(
+        'Evolution Hub did not return a valid channel payload',
+        body: hub_channel
+      )
     end
 
     def validate_not_already_linked!
@@ -105,6 +116,36 @@ module EvoHub
           evolution_hub_meta: hub_block
         )
       end
+    end
+
+    def extract_channel(response)
+      return {} unless response.is_a?(Hash)
+
+      candidates = [
+        response['channel'],
+        response['data'].is_a?(Hash) ? response['data']['channel'] : nil,
+        response['data'],
+        response
+      ]
+      candidates.find { |candidate| candidate.is_a?(Hash) && candidate['id'].present? } || {}
+    end
+
+    def extract_webhook(response)
+      return {} unless response.is_a?(Hash)
+
+      candidates = [
+        response['webhook'],
+        response['data'].is_a?(Hash) ? response['data']['webhook'] : nil,
+        response['data'],
+        response
+      ]
+      webhook = candidates.find { |candidate| candidate.is_a?(Hash) && candidate['id'].present? } || {}
+      return webhook if webhook['id'].present?
+
+      raise EvoHub::Client::RequestError.new(
+        'Evolution Hub did not return a valid webhook payload',
+        body: response
+      )
     end
 
     def extract_phone_number(meta)
